@@ -1,6 +1,6 @@
-export * from "../internal/fhevm";
-export * from "../internal/RelayerSDKLoader";
-export * from "../internal/PublicKeyStorage";
-export * from "../internal/fhevmTypes";
-export * from "../internal/constants";
+// packages/fhevm-sdk/src/core/index.ts
 
+export { FHEVMClient } from './FHEVMClient';
+export { EncryptionService } from './EncryptionService';
+export { DecryptionService } from './DecryptionService';
+export { ContractService } from './ContractService';

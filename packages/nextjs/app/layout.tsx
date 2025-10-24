@@ -1,30 +1,51 @@
-import "@rainbow-me/rainbowkit/styles.css";
-import { DappWrapperWithProviders } from "~~/components/DappWrapperWithProviders";
-import { ThemeProvider } from "~~/components/ThemeProvider";
-import "~~/styles/globals.css";
-import { getMetadata } from "~~/utils/helper/getMetadata";
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
+import { FHEVMProvider } from '@fhevm-sdk/core/react';
+import { WagmiProvider } from 'wagmi';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { config } from '@/config/wagmi';
+import Header from '@/components/Layout/Header';
+import Footer from '@/components/Layout/Footer';
 
-export const metadata = getMetadata({
-  title: "Zama Template",
-  description: "Built with FHEVM",
-});
+const inter = Inter({ subsets: ['latin'] });
 
-const DappWrapper = ({ children }: { children: React.ReactNode }) => {
+export const metadata: Metadata = {
+  title: 'TipMyst - Confidential Tipping Platform',
+  description: 'Send encrypted tips to your favorite creators using FHEVM',
+};
+
+const queryClient = new QueryClient();
+
+// FHEVM Configuration
+const fhevmConfig = {
+  chainId: parseInt(process.env.NEXT_PUBLIC_CHAIN_ID || '11155111'),
+  gatewayUrl: process.env.NEXT_PUBLIC_GATEWAY_URL,
+  networkUrl: process.env.NEXT_PUBLIC_RPC_URL,
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html suppressHydrationWarning className={``}>
-      <head>
-        <link
-          href="https://api.fontshare.com/v2/css?f[]=telegraf@400,500,700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body>
-        <ThemeProvider enableSystem>
-          <DappWrapperWithProviders>{children}</DappWrapperWithProviders>
-        </ThemeProvider>
+    <html lang="en">
+      <body className={inter.className}>
+        <WagmiProvider config={config}>
+          <QueryClientProvider client={queryClient}>
+            <FHEVMProvider config={fhevmConfig}>
+              <div className="min-h-screen flex flex-col">
+                <Header />
+                <main className="flex-grow">
+                  {children}
+                </main>
+                <Footer />
+              </div>
+            </FHEVMProvider>
+          </QueryClientProvider>
+        </WagmiProvider>
       </body>
     </html>
   );
-};
-
-export default DappWrapper;
+}
