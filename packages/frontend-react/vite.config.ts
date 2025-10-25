@@ -3,26 +3,12 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  base: '/',
   resolve: {
-    alias: {
-      global: 'globalThis',
-    }
-  },
-  define: {
-    'global': 'globalThis',
-    'process.env': {}
-  },
-  optimizeDeps: {
-    exclude: ['fhevm-sdk', '@zama-fhe/relayer-sdk'],
-    esbuildOptions: {
-      define: {
-        global: 'globalThis'
-      }
-    }
+    dedupe: ['react', 'react-dom']
   },
   build: {
-    commonjsOptions: {
-      transformMixedEsModules: true
-    }
+    outDir: 'dist',
+    sourcemap: false
   }
 })
