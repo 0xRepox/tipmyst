@@ -38,7 +38,7 @@ export default function GrantPermissionCard() {
       setStatus('Granting ACL permission to TipMyst contract...');
       
       const ACL_ADDRESS = '0x687820221192C5B662b25367F70076A37bc79b6c';
-      const aclContract = new ethers.Contract(ACL_ADDRESS, ACL_ABI, signer);
+      //const aclContract = new ethers.Contract(ACL_ADDRESS, ACL_ABI, signer);
 
       // This might not work directly - ACL permissions are usually handled by the contract
       // Let's try a different approach

@@ -64,3 +64,4 @@ Thumbs.db
 
 # Uploads
 uploads/
+packages/frontend-react/tsconfig.tsbuildinfo
