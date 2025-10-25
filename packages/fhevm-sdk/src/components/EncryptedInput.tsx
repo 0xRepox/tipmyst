@@ -44,10 +44,14 @@ export function EncryptedInput({
     try {
       let encrypted: EncryptedValue;
 
-      if (type.includes('128') || type.includes('256') || type === 'uint64') {
-        encrypted = await encrypt[type](BigInt(value));
+      if (type === 'uint64' || type === 'uint128' || type === 'uint256') {
+        // For 64-bit and larger, convert to bigint
+        const bigValue = BigInt(value);
+        encrypted = await encrypt[type](bigValue);
       } else {
-        encrypted = await encrypt[type](Number(value));
+        // For uint8, uint16, uint32 use number
+        const numValue = Number(value);
+        encrypted = await encrypt[type](numValue);
       }
 
       onEncrypt(encrypted);

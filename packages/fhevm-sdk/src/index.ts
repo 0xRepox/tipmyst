@@ -1,44 +1,23 @@
-// packages/fhevm-sdk/src/index.ts
-
-// Core exports (framework-agnostic)
-export {
+export { 
   FHEVMClient,
-  EncryptionService,
-  DecryptionService,
-  ContractService,
-} from './core';
+  getFHEVMClient,
+  resetFHEVMClient,
+  SepoliaConfig,
+  type FHEVMConfig 
+} from './core/fhevm';
 
-// Type exports
-export type {
-  FHEVMConfig,
-  FHEVMClientInstance,
-  EncryptionServiceInterface,
-  DecryptionServiceInterface,
-  ContractServiceInterface,
-  EncryptedValue,
-  Keypair,
-  EIP712Params,
-} from './types';
-
-// React adapter exports
 export {
-  FHEVMProvider,
-  useFHEVM,
-  useEncrypt,
-  useDecrypt,
-  useContract,
-} from './adapters/react';
+  initializeFheInstance,
+  getFheInstance,
+  resetFheInstance
+} from './core/fhevmInstance';
 
-export type {
-  UseFHEVMReturn,
-  UseEncryptReturn,
-  UseDecryptReturn,
-  UseContractReturn,
-} from './adapters/react';
-
-// Reusable components
 export {
-  EncryptedInput,
-  DecryptButton,
-  EncryptedBalance,
-} from './components';
+  CONTRACTS,
+  NETWORKS,
+  FHEVM_CONTRACTS,
+  GATEWAY_CONTRACTS,
+  RELAYER,
+  type ContractAddress,
+  type NetworkName
+} from './constants';

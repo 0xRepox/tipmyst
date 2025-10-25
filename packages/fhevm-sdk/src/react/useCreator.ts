@@ -34,13 +34,16 @@ export function useCreator(address?: string) {
         const data = await contract.getCreator(creatorAddress);
 
         const creatorData: Creator = {
-          name: data.name,
+          id: creatorAddress,
+          address: data.wallet,
+          username: data.name,
+          displayName: data.name,
           bio: data.bio,
-          category: data.category,
-          imageUrl: data.imageUrl,
-          wallet: data.wallet,
-          supporterCount: Number(data.supporterCount),
-          exists: data.exists,
+          category: data.category as any,
+          avatar: data.imageUrl,
+          totalTips: 0n,
+          tipCount: Number(data.supporterCount),
+          createdAt: Date.now(),
         };
 
         setCreator(creatorData);
@@ -68,13 +71,16 @@ export function useCreator(address?: string) {
       const creatorPromises = addresses.map(async (addr) => {
         const data = await contract.getCreator(addr);
         return {
-          name: data.name,
+          id: addr,
+          address: data.wallet,
+          username: data.name,
+          displayName: data.name,
           bio: data.bio,
-          category: data.category,
-          imageUrl: data.imageUrl,
-          wallet: data.wallet,
-          supporterCount: Number(data.supporterCount),
-          exists: data.exists,
+          category: data.category as any,
+          avatar: data.imageUrl,
+          totalTips: 0n,
+          tipCount: Number(data.supporterCount),
+          createdAt: Date.now(),
         };
       });
 

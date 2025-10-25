@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { FhevmInstance } from "../fhevmTypes.js";
-import { RelayerEncryptedInput } from "@zama-fhe/relayer-sdk/web";
+import { FhevmInstance } from "../fhevmTypes";
 import { ethers } from "ethers";
 
 export type EncryptResult = {
@@ -10,7 +9,7 @@ export type EncryptResult = {
   inputProof: Uint8Array;
 };
 
-// Map external encrypted integer type to RelayerEncryptedInput builder method
+// Map external encrypted integer type to encrypted input builder method
 export const getEncryptionMethod = (internalType: string) => {
   switch (internalType) {
     case "externalEbool":
@@ -82,11 +81,11 @@ export const useFHEEncryption = (params: {
   );
 
   const encryptWith = useCallback(
-    async (buildFn: (builder: RelayerEncryptedInput) => void): Promise<EncryptResult | undefined> => {
+    async (buildFn: (builder: any) => void): Promise<EncryptResult | undefined> => {
       if (!instance || !ethersSigner || !contractAddress) return undefined;
 
       const userAddress = await ethersSigner.getAddress();
-      const input = instance.createEncryptedInput(contractAddress, userAddress) as RelayerEncryptedInput;
+      const input = instance.createEncryptedInput(contractAddress, userAddress);
       buildFn(input);
       const enc = await input.encrypt();
       return enc;

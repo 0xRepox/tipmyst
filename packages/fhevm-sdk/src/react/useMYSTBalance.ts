@@ -19,8 +19,13 @@ const MYST_TOKEN_ADDRESS = "0x87dfBF3A3356b567A6290DBD365b4554770B0704";
 const RPC_URL = "http://127.0.0.1:8545";
 
 export function useMYSTBalance(address?: string) {
-  const { instance } = useFhevm();
-  const { decrypt } = useFHEDecrypt();
+  const { instance } = useFhevm({
+    provider: RPC_URL,
+    chainId: 31337,
+  });
+  const { decrypt } = useFHEDecrypt({
+    instance,
+  });
   const [balance, setBalance] = useState<string | null>(null);
   const [encryptedBalance, setEncryptedBalance] = useState<bigint | null>(null);
   const [canClaim, setCanClaim] = useState(false);
@@ -66,15 +71,15 @@ export function useMYSTBalance(address?: string) {
 
         if (!instance) throw new Error("FHEVM not initialized");
 
-        const decrypted = await decrypt(
-          MYST_TOKEN_ADDRESS,
-          encryptedBalance,
+        const decrypted = await decrypt({
+          contractAddress: MYST_TOKEN_ADDRESS,
+          handle: encryptedBalance,
           userAddress,
-          signer
-        );
+          signer,
+        });
 
         // Format with 18 decimals
-        const formatted = formatBalance(decrypted);
+        const formatted = formatBalance(decrypted.toString());
         setBalance(formatted);
         return formatted;
       } catch (err) {

@@ -20,8 +20,15 @@ const TIPMYST_ABI = [
 const TIPMYST_ADDRESS = "0x25E8Bb7e7a4701811b48Fdac0C65a2233A490D9b";
 
 export function useTipJar() {
-  const { instance } = useFhevm();
-  const { encrypt } = useFHEEncryption();
+  const { instance } = useFhevm({
+    provider: "http://127.0.0.1:8545",
+    chainId: 31337,
+  });
+  const { encryptWith } = useFHEEncryption({
+    instance,
+    ethersSigner: undefined,
+    contractAddress: TIPMYST_ADDRESS as `0x${string}`,
+  });
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -62,10 +69,18 @@ export function useTipJar() {
         if (!instance) throw new Error("FHEVM not initialized");
 
         // Encrypt amount
-        const encrypted = await encrypt(BigInt(amount));
+        const encrypted = await encryptWith((builder) => {
+          builder.add64(Number(amount));
+        });
+
+        if (!encrypted) throw new Error("Encryption failed");
 
         const contract = new Contract(TIPMYST_ADDRESS, TIPMYST_ABI, signer);
-        const tx = await contract.sendTip(to, encrypted.data, encrypted.signature);
+        const tx = await contract.sendTip(
+          to,
+          encrypted.handles[0],
+          encrypted.inputProof
+        );
         const receipt = await tx.wait();
 
         return receipt;
@@ -77,7 +92,7 @@ export function useTipJar() {
         setIsPending(false);
       }
     },
-    [instance, encrypt]
+    [instance, encryptWith]
   );
 
   const withdrawEarnings = useCallback(async (signer: any) => {

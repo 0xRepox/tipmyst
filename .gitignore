@@ -9,3 +9,58 @@ packages/*/.turbo
 packages/*/coverage
 tmp*
 .vscode
+# Build artifacts
+.deps/
+.states/
+artifacts/
+node_modules/
+dist/
+build/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads (if using local server)
+uploads/
+
+# Hardhat
+cache/
+typechain-types/
+
+# Build artifacts
+.deps/
+.states/
+artifacts/
+node_modules/
+dist/
+build/
+cache/
+typechain-types/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads
+uploads/

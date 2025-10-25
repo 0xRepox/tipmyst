@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2022",
     "module": "ESNext",
-    "lib": ["ES2020", "DOM"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "declaration": true,
     "outDir": "./dist",
     "rootDir": "./src",
@@ -10,11 +10,40 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "jsx": "react",
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "isolatedModules": true,
+    "allowImportingTsExtensions": false,
+    "noEmit": false
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+  "include": [
+    "src/core/fhevm.ts",
+    "src/constants/index.ts",
+    "src/react/FHEVMProvider.tsx",
+    "src/react/hooks/useEncrypt.ts",
+    "src/react/hooks/useDecrypt.ts",
+    "src/react/index.ts",
+    "src/index.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "src/internal/**/*",
+    "src/adapters/**/*",
+    "src/components/**/*",
+    "src/storage/**/*",
+    "src/utils/**/*",
+    "src/types/**/*",
+    "src/FhevmDecryptionSignature.ts",
+    "src/react/useCreator.ts",
+    "src/react/useFHEDecrypt.ts",
+    "src/react/useFHEEncryption.ts",
+    "src/react/useMYSTBalance.ts",
+    "src/react/useTipJar.ts"
+  ]
 }

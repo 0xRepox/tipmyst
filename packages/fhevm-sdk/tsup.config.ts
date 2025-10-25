@@ -1,17 +1,33 @@
-// packages/fhevm-sdk/tsup.config.ts
-
 import { defineConfig } from 'tsup';
 
-export default defineConfig({
-  entry: [
-    'src/index.ts',
-    'src/adapters/react/index.ts',
-    'src/components/index.ts',
-  ],
-  format: ['cjs', 'esm'],
-  dts: true,
-  splitting: false,
-  sourcemap: true,
-  clean: true,
-  external: ['react', 'fhevmjs', 'ethers'],
-});
+export default defineConfig([
+  // Core package
+  {
+    entry: ['src/index.ts'],
+    format: ['cjs', 'esm'],
+    dts: false,
+    splitting: false,
+    sourcemap: true,
+    clean: true,
+    external: ['@zama-fhe/relayer-sdk', '@zama-fhe/relayer-sdk/web', 'ethers'],
+  },
+  // React package
+  {
+    entry: ['src/react/index.ts'],
+    format: ['cjs', 'esm'],
+    dts: false,
+    splitting: false,
+    sourcemap: true,
+    outDir: 'dist/react',
+    external: ['@zama-fhe/relayer-sdk', '@zama-fhe/relayer-sdk/web', 'ethers', 'react'],
+  },
+  // Constants package
+  {
+    entry: ['src/constants/index.ts'],
+    format: ['cjs', 'esm'],
+    dts: false,
+    splitting: false,
+    sourcemap: true,
+    outDir: 'dist/constants',
+  },
+]);
