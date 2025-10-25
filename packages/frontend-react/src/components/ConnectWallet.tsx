@@ -1,3 +1,4 @@
+// src/components/ConnectWallet.tsx
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { Wallet, LogOut } from 'lucide-react';
 
