@@ -373,7 +373,7 @@ pnpm dev
 | Contract      | Address                                      | Purpose                    |
 | ------------- | -------------------------------------------- | -------------------------- |
 | **MYSTToken** | `0x5157d0755F5028Dd5B07e51437e0Ff763C020252` | Encrypted ERC20-like token |
-| **TipMyst**   | `0x916F28c7341A70d9Cf81Ce450C42Dd5380A3175E` | Tipping platform           |
+| **TipMyst**   | `0x61efE8dDA740AaBB3907d808033E8F3A2968a13D` | Tipping platform           |
 
 **Network Configuration:**
 - Chain ID: `11155111` (Sepolia)
@@ -382,7 +382,7 @@ pnpm dev
 
 **View on Etherscan:**
 - [MYSTToken](https://sepolia.etherscan.io/address/0x5157d0755F5028Dd5B07e51437e0Ff763C020252)
-- [TipMyst](https://sepolia.etherscan.io/address/0x916F28c7341A70d9Cf81Ce450C42Dd5380A3175E)
+- [TipMyst](https://sepolia.etherscan.io/address/0x61efE8dDA740AaBB3907d808033E8F3A2968a13D)
 
 ---
 
