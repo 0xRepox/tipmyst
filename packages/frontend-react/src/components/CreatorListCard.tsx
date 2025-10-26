@@ -26,9 +26,10 @@ interface Creator {
 
 interface CreatorListCardProps {
   preSelectedCreator?: string;
+  onClearPreSelected?: () => void;
 }
 
-export default function CreatorListCard({ preSelectedCreator }: CreatorListCardProps) {
+export default function CreatorListCard({ preSelectedCreator, onClearPreSelected }: CreatorListCardProps) {
   const [creators, setCreators] = useState<Creator[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
@@ -37,6 +38,7 @@ export default function CreatorListCard({ preSelectedCreator }: CreatorListCardP
   const [tipStep, setTipStep] = useState<'encrypting' | 'transferring' | 'recording' | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [linkCopied, setLinkCopied] = useState(false);
+  const [hasAutoSelected, setHasAutoSelected] = useState(false);
 
   const { address } = useAccount();
   const { encrypt, isEncrypting } = useEncrypt();
@@ -45,18 +47,19 @@ export default function CreatorListCard({ preSelectedCreator }: CreatorListCardP
     loadCreators();
   }, []);
 
-  // Auto-select creator from URL parameter
+  // Auto-select creator from URL parameter (only once)
   useEffect(() => {
-    if (preSelectedCreator && creators.length > 0 && !selectedCreator) {
+    if (preSelectedCreator && creators.length > 0 && !selectedCreator && !hasAutoSelected) {
       const creator = creators.find(
         c => c.address.toLowerCase() === preSelectedCreator.toLowerCase()
       );
       if (creator) {
         setSelectedCreator(creator);
+        setHasAutoSelected(true);
         console.log('✅ Auto-selected creator from shared link:', creator.name);
       }
     }
-  }, [preSelectedCreator, creators, selectedCreator]);
+  }, [preSelectedCreator, creators, selectedCreator, hasAutoSelected]);
 
   const loadCreators = async () => {
     try {
@@ -177,8 +180,13 @@ export default function CreatorListCard({ preSelectedCreator }: CreatorListCardP
         <button
           onClick={() => {
             setSelectedCreator(null);
-            // Clear URL parameter when going back
+            // Clear URL parameter and parent state
             window.history.replaceState({}, '', window.location.pathname);
+            if (onClearPreSelected) {
+              onClearPreSelected();
+            }
+            // Reset auto-selection flag
+            setHasAutoSelected(false);
           }}
           className="mb-6 flex items-center gap-2 text-[#FED10A] hover:text-[#FFC700] transition-colors"
         >
