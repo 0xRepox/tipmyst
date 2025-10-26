@@ -1,5 +1,5 @@
 {
-  "buildCommand": "pnpm install && pnpm --filter ./packages/fhevm-sdk build && cd packages/frontend-react && pnpm build",
+  "buildCommand": "pnpm --filter ./packages/fhevm-sdk build && pnpm --filter ./packages/frontend-react build",
   "outputDirectory": "packages/frontend-react/dist",
   "installCommand": "pnpm install --shamefully-hoist --no-frozen-lockfile",
   "framework": "vite",
