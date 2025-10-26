@@ -2,12 +2,21 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/tipmyst.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TipMyst - Confidential Tipping</title>
-    
-    <!-- Load Zama FHEVM RelayerSDK from CDN -->
+
+    <!-- Load RelayerSDK SYNCHRONOUSLY before React -->
     <script src="https://cdn.zama.ai/relayer-sdk-js/0.2.0/relayer-sdk-js.umd.cjs"></script>
+
+    <!-- Verify it loaded -->
+    <script>
+      if (!window.RelayerSDK && !window.relayerSDK) {
+        console.error("❌ RelayerSDK failed to load from CDN");
+      } else {
+        console.log("✅ RelayerSDK loaded successfully");
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
