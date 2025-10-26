@@ -5,7 +5,7 @@ import { sepolia } from 'wagmi/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { injected } from 'wagmi/connectors';
 import Landing from './pages/Landing';
-import DApp from './pages/DApp';
+import DApp from './pages/Dapp';
 
 const config = createConfig({
   chains: [sepolia],
