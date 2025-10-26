@@ -259,25 +259,31 @@ export default function CreatorListCard({ preSelectedCreator, onClearPreSelected
             </div>
 
             <button
-              onClick={handleSendTip}
-              disabled={!tipAmount || Number(tipAmount) <= 0 || tipping || isEncrypting}
-              className="w-full gold-button flex items-center justify-center gap-2 disabled:opacity-40"
-            >
-              {tipping || isEncrypting ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
-                  {tipStep === 'encrypting' && 'Encrypting (1/3)...'}
-                  {tipStep === 'transferring' && 'Transferring (2/3)...'}
-                  {tipStep === 'recording' && 'Recording (3/3)...'}
-                  {!tipStep && 'Processing...'}
-                </>
-              ) : (
-                <>
-                  <Send className="w-5 h-5" />
-                  Send {tipAmount || '0'} MYST
-                </>
-              )}
-            </button>
+  onClick={handleSendTip}
+  disabled={!tipAmount || Number(tipAmount) <= 0 || tipping || isEncrypting}
+  className={`w-full gold-button flex items-center justify-center gap-2 ${
+    tipping || isEncrypting 
+      ? 'opacity-80 cursor-not-allowed' 
+      : 'disabled:opacity-40'
+  }`}
+>
+  {tipping || isEncrypting ? (
+    <>
+      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+      <span className="text-white font-medium ml-2">
+        {tipStep === 'encrypting' && 'Encrypting (1/3)...'}
+        {tipStep === 'transferring' && 'Transferring (2/3)...'}
+        {tipStep === 'recording' && 'Recording (3/3)...'}
+        {!tipStep && 'Processing...'}
+      </span>
+    </>
+  ) : (
+    <>
+      <Send className="w-5 h-5" />
+      <span className="text-white font-medium">Send {tipAmount || '0'} MYST</span>
+    </>
+  )}
+</button>
 
             {/* Progress Bar */}
             {tipping && (
