@@ -1,6 +1,12 @@
 {
-  "buildCommand": "cd packages/frontend-react && pnpm build",
+  "buildCommand": "pnpm install && pnpm --filter ./packages/fhevm-sdk build && cd packages/frontend-react && pnpm build",
   "outputDirectory": "packages/frontend-react/dist",
-  "installCommand": "pnpm install --no-frozen-lockfile",
-  "framework": "vite"
+  "installCommand": "pnpm install --shamefully-hoist --no-frozen-lockfile",
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
