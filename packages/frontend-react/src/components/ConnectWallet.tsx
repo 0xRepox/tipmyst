@@ -1,11 +1,46 @@
 // src/components/ConnectWallet.tsx
-import { useAccount, useConnect, useDisconnect } from 'wagmi';
+import { useEffect } from 'react';
+import { useAccount, useConnect, useDisconnect, useSwitchChain } from 'wagmi';
+import { sepolia } from 'wagmi/chains';
 import { Wallet, LogOut } from 'lucide-react';
 
 export default function ConnectWallet() {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chainId } = useAccount();
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
+  const { switchChain } = useSwitchChain();
+
+  // Auto-switch to Sepolia when connected but on wrong network
+  useEffect(() => {
+    if (isConnected && chainId && chainId !== sepolia.id) {
+      console.log('🔄 Auto-switching to Sepolia network...');
+      switchChain({ chainId: sepolia.id })
+        .then(() => {
+          console.log('✅ Successfully switched to Sepolia');
+        })
+        .catch((error) => {
+          console.log('⚠️ User declined network switch:', error);
+        });
+    }
+  }, [isConnected, chainId, switchChain]);
+
+  const handleConnect = async () => {
+    try {
+      await connect({ connector: connectors[0] });
+      
+      // Small delay to ensure connection is established
+      setTimeout(() => {
+        if (chainId && chainId !== sepolia.id) {
+          switchChain({ chainId: sepolia.id })
+            .catch((error) => {
+              console.log('⚠️ Network switch declined:', error);
+            });
+        }
+      }, 500);
+    } catch (error) {
+      console.error('❌ Connection failed:', error);
+    }
+  };
 
   if (isConnected) {
     return (
@@ -30,7 +65,7 @@ export default function ConnectWallet() {
 
   return (
     <button
-      onClick={() => connect({ connector: connectors[0] })}
+      onClick={handleConnect}
       className="gold-button flex items-center gap-2"
     >
       <Wallet className="w-5 h-5" />
