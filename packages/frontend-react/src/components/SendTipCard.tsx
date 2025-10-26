@@ -6,14 +6,13 @@ import { ethers, BrowserProvider } from 'ethers';
 import { Send, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 
 const TIP_MYST_ABI = [
-  "function sendTip(address creator, bytes32 inputHandle, bytes calldata inputProof) external",
+  "function sendTip(address creator, uint64 amount) external",
   "function isCreator(address creator) external view returns (bool)"
 ];
 
 const MYST_TOKEN_ABI = [
-  "function approve(address spender, bytes32 inputHandle, bytes calldata inputProof) external returns (bool)"
+  "function transfer(address to, bytes32 inputHandle, bytes calldata inputProof) external returns (bool)"
 ];
-
 export default function SendTipCard() {
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
@@ -24,78 +23,70 @@ export default function SendTipCard() {
   const { encrypt, isEncrypting } = useEncrypt();
 
   const handleSend = async () => {
-    if (!recipient || !amount || !address) return;
+  if (!recipient || !amount || !address) return;
 
-    try {
-      // Step 1: Validate
-      setStatus('encrypting');
-      setMessage('Validating recipient...');
+  try {
+    setStatus('encrypting');
+    setMessage('Validating recipient...');
 
-      const provider = new BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const tipContract = new ethers.Contract(CONTRACTS.TIP_JAR, TIP_MYST_ABI, signer);
-      
-      const isCreator = await tipContract.isCreator(recipient);
-      if (!isCreator) {
-        throw new Error('Recipient is not a registered creator');
-      }
-
-      // Step 2: Encrypt
-      setMessage('Encrypting tip amount...');
-      const encrypted = await encrypt(
-        CONTRACTS.MYST_TOKEN,
-        address,
-        (input) => input.add64(BigInt(Math.floor(Number(amount) * 1_000_000)))
-      );
-
-      // Step 3: Approve (optimized - only wait for 1 confirmation)
-      setStatus('approving');
-      setMessage('Approving tokens... (1/2)');
-
-      const tokenContract = new ethers.Contract(CONTRACTS.MYST_TOKEN, MYST_TOKEN_ABI, signer);
-      const approveTx = await tokenContract.approve(
-        CONTRACTS.TIP_JAR,
-        encrypted.handles[0],
-        encrypted.proof
-      );
-      await approveTx.wait(1); // Only 1 confirmation
-
-      // Step 4: Send Tip (optimized - only wait for 1 confirmation)
-      setStatus('sending');
-      setMessage('Sending tip... (2/2)');
-
-      const tipTx = await tipContract.sendTip(
-        recipient,
-        encrypted.handles[0],
-        encrypted.proof
-      );
-      await tipTx.wait(1); // Only 1 confirmation
-
-      // Success
-      setStatus('success');
-      setMessage('Tip sent successfully! 🎉');
-      
-      // Reset form
-      setRecipient('');
-      setAmount('');
-
-      // Reset status after 3 seconds
-      setTimeout(() => {
-        setStatus('idle');
-        setMessage('');
-      }, 3000);
-    } catch (error: any) {
-      console.error('❌ Tip failed:', error);
-      setStatus('error');
-      setMessage(error.message || 'Failed to send tip');
-      
-      // Reset error after 5 seconds
-      setTimeout(() => {
-        setStatus('idle');
-        setMessage('');
-      }, 5000);
+    const provider = new BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const tipContract = new ethers.Contract(CONTRACTS.TIP_JAR, TIP_MYST_ABI, signer);
+    
+    const isCreator = await tipContract.isCreator(recipient);
+    if (!isCreator) {
+      throw new Error('Recipient is not a registered creator');
     }
-  };
+
+    const rawAmount = BigInt(Math.floor(Number(amount) * 1_000_000));
+
+    // Step 1: Encrypt
+    setMessage('Encrypting tip amount...');
+    const encrypted = await encrypt(
+      CONTRACTS.MYST_TOKEN,
+      address,
+      (input) => input.add64(rawAmount)
+    );
+
+    // Step 2: Transfer tokens (like CreatorListCard)
+    setStatus('approving');
+    setMessage('Transferring tokens... (1/2)');
+
+    const tokenContract = new ethers.Contract(CONTRACTS.MYST_TOKEN, MYST_TOKEN_ABI, signer);
+    const transferTx = await tokenContract.transfer(
+      CONTRACTS.TIP_JAR,
+      encrypted.handles[0],
+      encrypted.proof
+    );
+    await transferTx.wait(1);
+
+    // Step 3: Record tip (like CreatorListCard)
+    setStatus('sending');
+    setMessage('Recording tip... (2/2)');
+
+    const tipTx = await tipContract.sendTip(recipient, rawAmount);
+    await tipTx.wait(1);
+
+    setStatus('success');
+    setMessage('Tip sent successfully!');
+    setRecipient('');
+    setAmount('');
+
+    setTimeout(() => {
+      setStatus('idle');
+      setMessage('');
+    }, 3000);
+  } catch (error: any) {
+    console.error('Tip failed:', error);
+    setStatus('error');
+    setMessage(error.message || 'Failed to send tip');
+    
+    setTimeout(() => {
+      setStatus('idle');
+      setMessage('');
+    }, 5000);
+  }
+};
 
   const getStatusIcon = () => {
     switch (status) {
