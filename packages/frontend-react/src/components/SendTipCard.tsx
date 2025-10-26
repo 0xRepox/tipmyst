@@ -27,6 +27,7 @@ export default function SendTipCard() {
     if (!recipient || !amount || !address) return;
 
     try {
+      // Step 1: Validate
       setStatus('encrypting');
       setMessage('Validating recipient...');
 
@@ -39,6 +40,7 @@ export default function SendTipCard() {
         throw new Error('Recipient is not a registered creator');
       }
 
+      // Step 2: Encrypt
       setMessage('Encrypting tip amount...');
       const encrypted = await encrypt(
         CONTRACTS.MYST_TOKEN,
@@ -46,8 +48,9 @@ export default function SendTipCard() {
         (input) => input.add64(BigInt(Math.floor(Number(amount) * 1_000_000)))
       );
 
+      // Step 3: Approve (optimized - only wait for 1 confirmation)
       setStatus('approving');
-      setMessage('Approving token spend...');
+      setMessage('Approving tokens... (1/2)');
 
       const tokenContract = new ethers.Contract(CONTRACTS.MYST_TOKEN, MYST_TOKEN_ABI, signer);
       const approveTx = await tokenContract.approve(
@@ -55,23 +58,28 @@ export default function SendTipCard() {
         encrypted.handles[0],
         encrypted.proof
       );
-      await approveTx.wait();
+      await approveTx.wait(1); // Only 1 confirmation
 
+      // Step 4: Send Tip (optimized - only wait for 1 confirmation)
       setStatus('sending');
-      setMessage('Sending tip...');
+      setMessage('Sending tip... (2/2)');
 
       const tipTx = await tipContract.sendTip(
         recipient,
         encrypted.handles[0],
         encrypted.proof
       );
-      await tipTx.wait();
+      await tipTx.wait(1); // Only 1 confirmation
 
+      // Success
       setStatus('success');
       setMessage('Tip sent successfully! 🎉');
+      
+      // Reset form
       setRecipient('');
       setAmount('');
 
+      // Reset status after 3 seconds
       setTimeout(() => {
         setStatus('idle');
         setMessage('');
@@ -80,6 +88,12 @@ export default function SendTipCard() {
       console.error('❌ Tip failed:', error);
       setStatus('error');
       setMessage(error.message || 'Failed to send tip');
+      
+      // Reset error after 5 seconds
+      setTimeout(() => {
+        setStatus('idle');
+        setMessage('');
+      }, 5000);
     }
   };
 
@@ -137,6 +151,7 @@ export default function SendTipCard() {
             onChange={(e) => setRecipient(e.target.value)}
             placeholder="0x..."
             className="premium-input font-mono text-sm"
+            disabled={status !== 'idle'}
           />
           <p className="text-xs text-gray-500 mt-2">
             Enter the Ethereum address of a registered creator
@@ -155,6 +170,7 @@ export default function SendTipCard() {
             onChange={(e) => setAmount(e.target.value)}
             placeholder="1.00"
             className="premium-input"
+            disabled={status !== 'idle'}
           />
           <p className="text-xs text-gray-500 mt-2">
             Enter amount in MYST (e.g., 1.00 = 1 MYST, 0.5 = 0.5 MYST)
@@ -164,17 +180,29 @@ export default function SendTipCard() {
         {/* Send Button */}
         <button
           onClick={handleSend}
-          disabled={!recipient || !amount || isEncrypting || ['approving', 'sending'].includes(status)}
+          disabled={!recipient || !amount || status !== 'idle'}
           className="w-full gold-button flex items-center justify-center gap-2 disabled:opacity-40"
         >
           {getStatusIcon()}
           {status === 'encrypting' && 'Encrypting...'}
-          {status === 'approving' && 'Approving...'}
-          {status === 'sending' && 'Sending...'}
+          {status === 'approving' && 'Approving (1/2)...'}
+          {status === 'sending' && 'Sending (2/2)...'}
           {status === 'success' && 'Success!'}
-          {status === 'error' && 'Try Again'}
+          {status === 'error' && 'Failed - Try Again'}
           {status === 'idle' && 'Send Encrypted Tip'}
         </button>
+
+        {/* Progress Bar */}
+        {['encrypting', 'approving', 'sending'].includes(status) && (
+          <div className="relative w-full h-2 bg-white/5 rounded-full overflow-hidden">
+            <div 
+              className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#FED10A] to-[#FFC700] transition-all duration-500 ease-out"
+              style={{
+                width: status === 'encrypting' ? '33%' : status === 'approving' ? '66%' : '100%'
+              }}
+            />
+          </div>
+        )}
 
         {/* Status Message */}
         {message && (
@@ -187,6 +215,9 @@ export default function SendTipCard() {
             <span className={getStatusColor()}>{getStatusIcon()}</span>
             <div className="flex-1">
               <p className="text-sm font-medium">{message}</p>
+              {['approving', 'sending'].includes(status) && (
+                <p className="text-xs opacity-70 mt-1">Please confirm in MetaMask</p>
+              )}
             </div>
           </div>
         )}

@@ -3,7 +3,7 @@ import { useAccount } from 'wagmi';
 import { useEncrypt } from 'fhevm-sdk/react';
 import { CONTRACTS } from '../constants';
 import { ethers, BrowserProvider } from 'ethers';
-import { Users, ArrowLeft, Send, Info, Lock } from 'lucide-react';
+import { Users, ArrowLeft, Send, Info, Lock, Search, Share2, Check } from 'lucide-react';
 
 const TIP_MYST_ABI = [
   "function getAllCreators() external view returns (address[])",
@@ -24,12 +24,19 @@ interface Creator {
   supporterCount: string;
 }
 
-export default function CreatorListCard() {
+interface CreatorListCardProps {
+  preSelectedCreator?: string;
+}
+
+export default function CreatorListCard({ preSelectedCreator }: CreatorListCardProps) {
   const [creators, setCreators] = useState<Creator[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
   const [tipAmount, setTipAmount] = useState('');
   const [tipping, setTipping] = useState(false);
+  const [tipStep, setTipStep] = useState<'encrypting' | 'transferring' | 'recording' | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const { address } = useAccount();
   const { encrypt, isEncrypting } = useEncrypt();
@@ -37,6 +44,19 @@ export default function CreatorListCard() {
   useEffect(() => {
     loadCreators();
   }, []);
+
+  // Auto-select creator from URL parameter
+  useEffect(() => {
+    if (preSelectedCreator && creators.length > 0 && !selectedCreator) {
+      const creator = creators.find(
+        c => c.address.toLowerCase() === preSelectedCreator.toLowerCase()
+      );
+      if (creator) {
+        setSelectedCreator(creator);
+        console.log('✅ Auto-selected creator from shared link:', creator.name);
+      }
+    }
+  }, [preSelectedCreator, creators, selectedCreator]);
 
   const loadCreators = async () => {
     try {
@@ -68,6 +88,21 @@ export default function CreatorListCard() {
     }
   };
 
+  const copyCreatorLink = async (creatorAddress: string) => {
+    const link = `${window.location.origin}${window.location.pathname}?creator=${creatorAddress}`;
+    await navigator.clipboard.writeText(link);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  };
+
+  // Filter creators based on search query
+  const filteredCreators = creators.filter(creator => 
+    creator.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    creator.bio.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    creator.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    creator.address.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const handleSendTip = async () => {
     if (!selectedCreator || !tipAmount || !address) return;
 
@@ -76,42 +111,37 @@ export default function CreatorListCard() {
 
       const provider = new BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
-
       const rawAmount = BigInt(Number(tipAmount) * 1_000_000);
 
-      console.log('💸 Tipping:', tipAmount, 'MYST =', rawAmount.toString(), 'raw units');
-
-      console.log('🔐 Encrypting amount for transfer...');
+      // Step 1: Encrypt
+      setTipStep('encrypting');
+      console.log('🔐 Encrypting amount...');
       const encrypted = await encrypt(
         CONTRACTS.MYST_TOKEN,
         address,
         (input) => input.add64(rawAmount)
       );
 
-      console.log('✅ Encrypted:', encrypted.handles[0].toString().substring(0, 20) + '...');
-
-      console.log('📤 Transferring encrypted tokens to TipMyst...');
+      // Step 2: Transfer (optimized - only 1 confirmation)
+      setTipStep('transferring');
+      console.log('📤 Transferring tokens...');
       const tokenContract = new ethers.Contract(CONTRACTS.MYST_TOKEN, MYST_TOKEN_ABI, signer);
       const transferTx = await tokenContract.transfer(
         CONTRACTS.TIP_JAR,
         encrypted.handles[0],
         encrypted.proof
       );
-      
-      console.log('⏳ Waiting for transfer...');
-      await transferTx.wait();
-      console.log('✅ Tokens transferred!');
+      await transferTx.wait(1); // Only 1 confirmation
 
-      console.log('📝 Recording tip with plaintext amount...');
+      // Step 3: Record tip (optimized - only 1 confirmation)
+      setTipStep('recording');
+      console.log('📝 Recording tip...');
       const tipContract = new ethers.Contract(CONTRACTS.TIP_JAR, TIP_MYST_ABI, signer);
       const tipTx = await tipContract.sendTip(
         selectedCreator.address,
         rawAmount
       );
-      
-      console.log('⏳ Waiting for tip record...');
-      await tipTx.wait();
-      console.log('✅ Tip recorded!');
+      await tipTx.wait(1); // Only 1 confirmation
 
       alert(`🎉 Successfully tipped ${selectedCreator.name} ${tipAmount} MYST!`);
       setSelectedCreator(null);
@@ -122,6 +152,7 @@ export default function CreatorListCard() {
       alert('Failed: ' + error.message);
     } finally {
       setTipping(false);
+      setTipStep(null);
     }
   };
 
@@ -144,7 +175,11 @@ export default function CreatorListCard() {
     return (
       <div className="premium-card h-full">
         <button
-          onClick={() => setSelectedCreator(null)}
+          onClick={() => {
+            setSelectedCreator(null);
+            // Clear URL parameter when going back
+            window.history.replaceState({}, '', window.location.pathname);
+          }}
           className="mb-6 flex items-center gap-2 text-[#FED10A] hover:text-[#FFC700] transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -166,7 +201,7 @@ export default function CreatorListCard() {
                 {selectedCreator.name}
               </h2>
               <p className="text-gray-400 mb-4">{selectedCreator.bio}</p>
-              <div className="flex justify-center gap-3">
+              <div className="flex justify-center gap-3 mb-4">
                 <span className="gold-badge">
                   {selectedCreator.category}
                 </span>
@@ -175,6 +210,24 @@ export default function CreatorListCard() {
                   {selectedCreator.supporterCount} supporters
                 </span>
               </div>
+
+              {/* Copy Creator Link Button */}
+              <button
+                onClick={() => copyCreatorLink(selectedCreator.address)}
+                className="mt-4 px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:border-[#FED10A]/40 text-sm text-white hover:text-[#FED10A] transition-all flex items-center gap-2 mx-auto"
+              >
+                {linkCopied ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    Link Copied!
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="w-4 h-4" />
+                    Copy Creator Link
+                  </>
+                )}
+              </button>
             </div>
           </div>
 
@@ -205,7 +258,10 @@ export default function CreatorListCard() {
               {tipping || isEncrypting ? (
                 <>
                   <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
-                  Sending Tip...
+                  {tipStep === 'encrypting' && 'Encrypting (1/3)...'}
+                  {tipStep === 'transferring' && 'Transferring (2/3)...'}
+                  {tipStep === 'recording' && 'Recording (3/3)...'}
+                  {!tipStep && 'Processing...'}
                 </>
               ) : (
                 <>
@@ -215,14 +271,30 @@ export default function CreatorListCard() {
               )}
             </button>
 
+            {/* Progress Bar */}
+            {tipping && (
+              <div className="relative w-full h-2 bg-white/5 rounded-full overflow-hidden">
+                <div 
+                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#FED10A] to-[#FFC700] transition-all duration-500 ease-out"
+                  style={{
+                    width: tipStep === 'encrypting' ? '33%' : tipStep === 'transferring' ? '66%' : '100%'
+                  }}
+                />
+              </div>
+            )}
+
             <div className="alert-info flex items-start gap-3">
               <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
               <div className="text-sm">
                 <p className="font-semibold mb-2">🔐 How it works:</p>
                 <ol className="list-decimal ml-4 space-y-1 opacity-80">
-                  <p>Transfer encrypted tokens to TipMyst</p>
-                  </ol>
-          
+                  <li>Encrypt tip amount (FHE encryption)</li>
+                  <li>Transfer encrypted tokens to TipMyst</li>
+                  <li>Record tip on-chain</li>
+                </ol>
+                <p className="mt-2 text-xs opacity-80">
+                  Total: 2 MetaMask signatures • Optimized for speed
+                </p>
               </div>
             </div>
           </div>
@@ -239,7 +311,26 @@ export default function CreatorListCard() {
         </div>
         <div>
           <h2 className="text-xl font-bold text-white">Browse Creators</h2>
-          <p className="text-xs text-gray-500">Support your favorite creators</p>
+          <p className="text-xs text-gray-500">
+            {filteredCreators.length > 0 && searchQuery 
+              ? `Found ${filteredCreators.length} creator${filteredCreators.length !== 1 ? 's' : ''}`
+              : 'Support your favorite creators'
+            }
+          </p>
+        </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className="mb-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by name, bio, category, or address..."
+            className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#FED10A]/40 transition-colors"
+          />
         </div>
       </div>
 
@@ -251,13 +342,24 @@ export default function CreatorListCard() {
           <p className="text-gray-400 mb-2">No other creators found</p>
           <p className="text-sm text-gray-500">Register as a creator or invite others!</p>
         </div>
+      ) : filteredCreators.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-[#FED10A]/10 flex items-center justify-center">
+            <Search className="w-10 h-10 text-[#FED10A]/50" />
+          </div>
+          <p className="text-gray-400 mb-2">No creators match your search</p>
+          <p className="text-sm text-gray-500">Try a different search term</p>
+        </div>
       ) : (
         <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-          {creators.map((creator, index) => (
+          {filteredCreators.map((creator, index) => (
             <div
               key={creator.address}
               className="group relative p-4 rounded-xl bg-gradient-to-br from-white/5 to-transparent border border-white/10 hover:border-[#FED10A]/40 transition-all duration-300 cursor-pointer hover:translate-x-1"
-              onClick={() => setSelectedCreator(creator)}
+              onClick={() => {
+                console.log('Clicked creator:', creator.name);
+                setSelectedCreator(creator);
+              }}
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               <div className="absolute inset-0 bg-gradient-to-r from-[#FED10A]/0 via-[#FED10A]/5 to-[#FED10A]/0 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"></div>

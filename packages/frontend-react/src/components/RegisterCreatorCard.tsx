@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { CONTRACTS } from '../constants';
 import { ethers, BrowserProvider } from 'ethers';
-import { UserPlus, CheckCircle, Users, Award, Upload, X } from 'lucide-react';
+import { UserPlus, CheckCircle, Users, Award, Upload, X, Share2, Check } from 'lucide-react';
 
 const TIP_MYST_ABI = [
   "function registerCreator(string memory _name, string memory _bio, string memory _category, string memory _imageUrl) external",
@@ -21,15 +21,24 @@ export default function RegisterCreatorCard() {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
   const [creatorInfo, setCreatorInfo] = useState<any>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const { address } = useAccount();
 
-  // Default placeholder image
-  const DEFAULT_IMAGE = 'https://api.dicebear.com/7.x/shapes/svg?seed=' + (address || 'default');
-
+  // Default placeholder image - auto-generated avatar
+  const DEFAULT_IMAGE = `https://api.dicebear.com/7.x/avataaars/svg?seed=${address || 'default'}`;
+  
   useEffect(() => {
     checkIfRegistered();
   }, [address]);
+
+  const copyShareableLink = async () => {
+    if (!address) return;
+    const link = `${window.location.origin}${window.location.pathname}?creator=${address}`;
+    await navigator.clipboard.writeText(link);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -67,9 +76,8 @@ export default function RegisterCreatorCard() {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('upload_preset', 'tipmyst_uploads'); // Your Cloudinary preset
+      formData.append('upload_preset', 'tipmyst_uploads');
       
-      // Your Cloudinary cloud name
       const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dztd1tlbl/image/upload';
       
       const response = await fetch(CLOUDINARY_URL, {
@@ -139,7 +147,7 @@ export default function RegisterCreatorCard() {
         finalImageUrl = DEFAULT_IMAGE;
       }
 
-      console.log('🖼️  Using image URL:', finalImageUrl);
+      console.log('🖼️ Using image URL:', finalImageUrl);
 
       const tx = await contract.registerCreator(
         name,
@@ -218,6 +226,24 @@ export default function RegisterCreatorCard() {
             </div>
           </div>
 
+          {/* Share Link Button */}
+          <button
+            onClick={copyShareableLink}
+            className="w-full gold-button flex items-center justify-center gap-2"
+          >
+            {linkCopied ? (
+              <>
+                <Check className="w-5 h-5" />
+                Link Copied!
+              </>
+            ) : (
+              <>
+                <Share2 className="w-5 h-5" />
+                Copy Shareable Link
+              </>
+            )}
+          </button>
+
           {/* Address Info */}
           <div className="alert-success flex items-start gap-3">
             <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
@@ -225,7 +251,7 @@ export default function RegisterCreatorCard() {
               <p className="font-semibold mb-1">Your Creator Address</p>
               <p className="font-mono text-xs break-all opacity-80">{address}</p>
               <p className="text-xs mt-2 opacity-80">
-                Share this address so people can send you confidential tips!
+                Share your link on social media so people can send you confidential tips!
               </p>
             </div>
           </div>
