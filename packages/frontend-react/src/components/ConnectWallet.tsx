@@ -14,13 +14,12 @@ export default function ConnectWallet() {
   useEffect(() => {
     if (isConnected && chainId && chainId !== sepolia.id) {
       console.log('🔄 Auto-switching to Sepolia network...');
-      switchChain({ chainId: sepolia.id })
-        .then(() => {
-          console.log('✅ Successfully switched to Sepolia');
-        })
-        .catch((error) => {
-          console.log('⚠️ User declined network switch:', error);
-        });
+      try {
+        switchChain({ chainId: sepolia.id });
+        console.log('✅ Network switch requested');
+      } catch (error) {
+        console.log('⚠️ Network switch failed:', error);
+      }
     }
   }, [isConnected, chainId, switchChain]);
 
@@ -31,10 +30,11 @@ export default function ConnectWallet() {
       // Small delay to ensure connection is established
       setTimeout(() => {
         if (chainId && chainId !== sepolia.id) {
-          switchChain({ chainId: sepolia.id })
-            .catch((error) => {
-              console.log('⚠️ Network switch declined:', error);
-            });
+          try {
+            switchChain({ chainId: sepolia.id });
+          } catch (error) {
+            console.log('⚠️ Network switch declined:', error);
+          }
         }
       }, 500);
     } catch (error) {
