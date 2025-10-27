@@ -2,7 +2,7 @@
 
 > **Confidential Tipping Platform powered by Fully Homomorphic Encryption**
 
-A framework-agnostic FHEVM SDK showcasing confidential transactions on Ethereum using Zama's FHEVM technology. Built for the Zama Bounty Program (October 2025).
+A framework-agnostic FHEVM SDK showcasing confidential transactions on Ethereum using Zama's FHEVM technology. Built for the Zama Builder Program (October 2025).
 
 [![License](https://img.shields.io/badge/license-BSD--3--Clause--Clear-blue.svg)](LICENSE)
 [![Sepolia](https://img.shields.io/badge/network-Sepolia-purple.svg)](https://sepolia.etherscan.io)
