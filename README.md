@@ -8,7 +8,7 @@ A framework-agnostic FHEVM SDK showcasing confidential transactions on Ethereum 
 [![Sepolia](https://img.shields.io/badge/network-Sepolia-purple.svg)](https://sepolia.etherscan.io)
 [![FHEVM](https://img.shields.io/badge/Zama-FHEVM-green.svg)](https://docs.zama.ai/fhevm)
 
-[Live Demo](https://tipmyst.vercel.app) • [Video Walkthrough](#) • [Documentation](#usage)
+[Live Demo](https://tipmyst.vercel.app) • [Video Walkthrough](https://youtu.be/3DfG2PhXbLc) • [Documentation](#usage)
 
 ---
 
@@ -472,7 +472,7 @@ https://tipmyst.vercel.app/app?creator=0x10eefa09Fe5Ea24BB32F31F335AdA275D48F68E
 
 ## 🎥 Video Walkthrough
 
-[Watch the demo video](#) - Coming soon!
+[Watch the demo video](https://youtu.be/3DfG2PhXbLc)
 
 **Video covers:**
 1. SDK architecture overview
